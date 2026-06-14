@@ -160,13 +160,13 @@
           {{$hashID := .MediaHashID}}
           <div style="margin: 5px 0;">
             {{range .Tags}}
-            <span class="tag-badge">#{{.}} <a class="remove-tag" title="Sil" onclick="removeTag('{{$hashID}}', '{{.}}')">×</a></span>
+            <span class="tag-badge">#{{.}} <a class="remove-tag" title="Sil" onclick="removeTag({{$hashID | js}}, {{. | js}})">×</a></span>
             {{end}}
             <br>
-            <button class="add-tag-btn" onclick="addTag('{{.MediaHashID}}')">+ Etiket</button><br>
+            <button class="add-tag-btn" onclick="addTag({{.MediaHashID | js}})">+ Etiket</button><br>
             <div style="margin-top: 10px;">
-              <button class="move-btn" onclick="moveFile({{.ID}}, '{{.MediaHashID}}', '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}', '{{.FileFirstCreate.Format "02"}}')">Taşı</button>
-              <button class="rename-btn" onclick="renameFile({{.ID}}, '{{.FileName}}')">Adlandır</button>
+              <button class="move-btn" onclick="moveFile({{.ID}}, {{.MediaHashID | js}}, '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}', '{{.FileFirstCreate.Format "02"}}')">Taşı</button>
+              <button class="rename-btn" onclick="renameFile({{.ID}}, {{.FileName | js}})">Adlandır</button>
               <button class="delete-btn" onclick="deleteFile({{.ID}})">Sil</button>
             </div>
           </div>
@@ -197,11 +197,14 @@
     <span class="next-modal" onclick="changeImage(1, event)">&#10095;</span>
   </div>
 
-  <script src="app.js"></script>
   <script>
-    const imageSuggestBase = {{.IndexSuggestion.ImagePath}};
-    const videoSuggestBase = {{.IndexSuggestion.VideoPath}};
-    const defaultHashtag = {{.DefaultHashtag}};
+    // Go template motoru tırnaksız kullanımda JS kaçış karakterlerini otomatik halleder
+    window.imageSuggestBase = {{.IndexSuggestion.ImagePath}};
+    window.videoSuggestBase = {{.IndexSuggestion.VideoPath}};
+    window.defaultHashtag = {{.DefaultHashtag}};
+  </script>
+  <script src="/app.js"></script>
+  <script>
 
     let filterAbortController = null;
 

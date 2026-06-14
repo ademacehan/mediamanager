@@ -54,7 +54,12 @@ async function renameFile(id, currentName) {
 }
 
 async function moveFile(id, hashID, type, year, month, day) {
-    const base = type === 'image' ? imageSuggestBase : videoSuggestBase;
+    // Bu değişkenlerin HTML içerisinde (index.html vb.) <script> bloğunda tanımlanmış olması gerekir.
+    const imgBase = window.imageSuggestBase || "";
+    const vidBase = window.videoSuggestBase || "";
+    
+    const base = type === 'image' ? imgBase : vidBase;
+    // Path separator'ın (\\) düzgün oluştuğundan emin olalım
     const suggestedPath = base + "\\" + year + "\\" + month + "\\" + day;
     const targetDir = prompt("Dosyanın taşınacağı hedef dizin yolunu girin:", suggestedPath);
     if (!targetDir) return;
@@ -68,7 +73,8 @@ async function moveFile(id, hashID, type, year, month, day) {
 }
 
 async function addTag(hashID) {
-    const lastUsedTag = localStorage.getItem('lastUsedHashtag') || defaultHashtag;
+    const defTag = window.defaultHashtag || "";
+    const lastUsedTag = localStorage.getItem('lastUsedHashtag') || defTag;
     const tag = prompt("Eklemek istediğiniz etiketleri girin (virgül ile ayırabilirsiniz):", lastUsedTag);
     if (!tag) return;
     localStorage.setItem('lastUsedHashtag', tag);
@@ -96,7 +102,10 @@ async function autoTagFromDate(hashID, year, month, day, skipReload = false) {
         "05": "Mayıs", "06": "Haziran", "07": "Temmuz", "08": "Ağustos",
         "09": "Eylül", "10": "Ekim", "11": "Kasım", "12": "Aralık"
     };
-    const tags = `${year},${months[month] || month},${day}`;
+    
+    // Ay bilgisinin 2 haneli (01, 02 vb.) olduğundan emin olalım
+    const monthKey = String(month).padStart(2, '0');
+    const tags = `${year},${months[monthKey] || month},${day}`;
     const res = await fetch(`/api/add-tag?hash_id=${hashID}&tag=${encodeURIComponent(tags)}`, { method: 'POST' });
     if (res.ok) {
         if (!skipReload) location.reload();
@@ -120,7 +129,10 @@ async function deleteOthers(keepID, hashID) {
 }
 
 async function moveAndDeleteOthers(id, hashID, type, year, month, day) {
-    const base = type === 'image' ? imageSuggestBase : videoSuggestBase;
+    const imgBase = window.imageSuggestBase || "";
+    const vidBase = window.videoSuggestBase || "";
+    
+    const base = type === 'image' ? imgBase : vidBase;
     const suggestedPath = base + "\\" + year + "\\" + month + "\\" + day;
     const targetDir = prompt("DİKKAT: Bu işlem dosyayı taşıyacak ve DİĞER tüm kopyaları silecektir.\nHedef dizin yolunu girin:", suggestedPath);
     if (!targetDir) return;

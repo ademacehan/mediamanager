@@ -45,7 +45,7 @@ type Config struct {
 }
 
 func isImage(filename string) bool {
-	ext := filepath.Ext(filename)
+	ext := strings.ToLower(filepath.Ext(filename))
 	switch ext {
 	case ".jpg", ".jpeg", ".png", ".gif", ".webp":
 		return true
@@ -54,7 +54,7 @@ func isImage(filename string) bool {
 }
 
 func isVideo(filename string) bool {
-	ext := filepath.Ext(filename)
+	ext := strings.ToLower(filepath.Ext(filename))
 	switch ext {
 	case ".mp4", ".mov", ".avi", ".mkv":
 		return true

@@ -56,7 +56,7 @@
     .file-card small strong { font-size: inherit; }
     .file-card img { display: block; margin: 10px 0; border: 1px solid #eee; width: 100%; height: 300px; object-fit: contain; background-color: #eee; border-radius: 4px; }
     .file-card video { display: block; margin: 10px 0; border: 1px solid #eee; width: 100%; height: 300px; object-fit: contain; background-color: #eee; border-radius: 4px; }
-    .hash-link { text-decoration: none; color: #007bff; font-weight: bold; on-click: pointer; }
+    .hash-link { text-decoration: none; color: #007bff; font-weight: bold; cursor: pointer; }
     .hash-link.active { color: #ff4444 !important; }
     .delete-btn { background-color: #ff4444; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
     .rename-btn { background-color: #ffc107; color: black; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; margin-right: 5px; }
@@ -113,17 +113,17 @@
               
               <div style="margin: 10px 0;">
                 {{range .Tags}}<span class="tag-badge">#{{.}}</span>{{end}}
-                <button class="add-tag-btn" onclick="addTag('{{.MediaHashID}}')">+ Etiket</button>
+                <button class="add-tag-btn" onclick="addTag({{.MediaHashID | js}})">+ Etiket</button>
               </div>
 
               <div style="margin-top: 10px;">
-                <button class="move-btn" onclick="moveFile({{.ID}}, '{{.MediaHashID}}', '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}', '{{.FileFirstCreate.Format "02"}}')">Taşı</button>
-                <button class="rename-btn" onclick="renameFile({{.ID}}, '{{.FileName}}')">Adlandır</button>
+                <button class="move-btn" onclick="moveFile({{.ID}}, {{.MediaHashID | js}}, '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}', '{{.FileFirstCreate.Format "02"}}')">Taşı</button>
+                <button class="rename-btn" onclick="renameFile({{.ID}}, {{.FileName | js}})">Adlandır</button>
                 <button class="delete-btn" onclick="deleteFile({{.ID}})">Sil</button>
-                <button class="delete-others-btn" onclick="deleteOthers({{.ID}}, '{{.MediaHashID}}')">Diğerlerini Sil</button>
+                <button class="delete-others-btn" onclick="deleteOthers({{.ID}}, {{.MediaHashID | js}})">Diğerlerini Sil</button>
               </div>
               <div>
-                <button class="move-delete-others-btn" onclick="moveAndDeleteOthers({{.ID}}, '{{.MediaHashID}}', '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}', '{{.FileFirstCreate.Format "02"}}')">Taşı ve Diğerlerini Sil</button>
+                <button class="move-delete-others-btn" onclick="moveAndDeleteOthers({{.ID}}, {{.MediaHashID | js}}, '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}', '{{.FileFirstCreate.Format "02"}}')">Taşı ve Diğerlerini Sil</button>
               </div>
 
               {{if isImage .FileName}}
@@ -144,11 +144,13 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
   <script>
-    const imageSuggestBase = {{.IndexSuggestion.ImagePath}};
-    const videoSuggestBase = {{.IndexSuggestion.VideoPath}};
-    const defaultHashtag = {{.DefaultHashtag}};
+    window.imageSuggestBase = {{.IndexSuggestion.ImagePath}};
+    window.videoSuggestBase = {{.IndexSuggestion.VideoPath}};
+    window.defaultHashtag = {{.DefaultHashtag}};
+  </script>
+  <script src="/app.js"></script>
+  <script>
 
     document.addEventListener('DOMContentLoaded', () => {
       const sidebar = document.querySelector('.sidebar');
