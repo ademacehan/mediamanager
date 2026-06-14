@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Etiketsiz Dosyalar</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .nav { margin-bottom: 20px; }
+    .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+    
+    .main-container {
+      display: flex;
+      gap: 2px;
+      align-items: flex-start;
+    }
+
+    .sidebar {
+      width: fit-content;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .content {
+      flex: 2;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 8px;
+      min-height: 400px;
+      background-color: #f9f9f9;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 6px; border-bottom: 1px solid #ddd; font-size: 12px; }
+    tr:hover { background-color: #f1f1f1; }
+    
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+
+    .file-card {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      font-size: 10px;
+      word-break: break-all;
+    }
+    .file-card small { font-size: 9px; color: #666; word-break: break-all; display: block; line-height: 1.2; margin-top: 2px; }
+    .file-card strong { font-size: 11px; }
+    .file-card small strong { font-size: inherit; }
+    .file-card img { display: block; margin: 10px 0; border: 1px solid #eee; width: 100%; height: 300px; object-fit: contain; background-color: #eee; border-radius: 4px; }
+    .file-card video { display: block; margin: 10px 0; border: 1px solid #eee; width: 100%; height: 300px; object-fit: contain; background-color: #eee; border-radius: 4px; }
+    .hash-link { text-decoration: none; color: #007bff; font-weight: bold; on-click: pointer; }
+    .hash-link.active { color: #ff4444 !important; }
+    .delete-btn { background-color: #ff4444; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+    .rename-btn { background-color: #ffc107; color: black; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; margin-right: 5px; }
+    .move-btn { background-color: #17a2b8; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; margin-right: 5px; }
+    .move-btn:hover { background-color: #138496; }
+    .rename-btn:hover { background-color: #e0a800; }
+    .tag-badge { background-color: #e2e3e5; color: #383d41; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: 4px; display: inline-block; margin-bottom: 4px; }
+    .add-tag-btn { background: none; border: 1px dashed #6c757d; color: #6c757d; cursor: pointer; border-radius: 3px; padding: 2px 6px; font-size: 11px; }
+    .add-tag-btn:hover { background-color: #f8f9fa; }
+    .delete-btn:hover { background-color: #cc0000; }
+    .delete-others-btn { background-color: #6f42c1; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; font-size: 11px; margin-left: 4px; }
+    .delete-others-btn:hover { background-color: #5a32a3; }
+    .move-delete-others-btn { background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; font-size: 11px; margin-top: 5px; width: 100%; transition: background 0.2s; }
+    .move-delete-others-btn:hover { background-color: #218838; }
+  </style>
+</head>
+  <body>
+    <div class="nav">
+        <a href="/">← Ana Sayfa</a>
+        <a href="/scan">Dizin Tara</a>
+        <a href="/duplicates">Tekrar Eden Dosyalar</a>
+        <a href="/untagged" style="text-decoration:none; color:#007bff;">Etiketsiz Dosyalar</a>
+    </div>
+    <div class="main-container">
+        <div class="sidebar">
+            <h3>Etiketsiz Dosyalar</h3>
+            <table>
+                <tr>
+                    <th>Hash</th>
+                    <th>Tekrar</th>
+                    <th>İşlem</th>
+                </tr>
+                {{range .Untagged}}
+                <tr>
+                    <td title="{{.Hash}}">{{printf "%.10s..." .Hash}}</td>
+                    <td><strong>{{.Count}}</strong></td>
+                    <td><a class="hash-link" href="/untagged?hash_id={{.ID}}">Aç</a></td>
+                </tr>
+                {{end}}
+            </table>
+        </div>
+        <div class="content">
+            {{if .ScanRecords}}
+            <h3>Dosya Detayları</h3>
+            <div class="grid-container">
+                {{range .ScanRecords}}
+                    <div class="file-card">
+                        <strong>Dosya:</strong> {{.FileName}}
+                        <small><strong>Yol:</strong> {{.FilePath}}</small>
+                        <small><strong>Tarih:</strong> {{.FileFirstCreate}}</small>
+                        <small>Size: {{.FileSize}} bytes</small>
+                        <small><strong>HashID:</strong> <a href="/duplicates?hash_id={{.MediaHashID}}" target="_blank" style="color: #007bff; text-decoration: none;">{{.MediaHashID}}</a></small>
+              
+                        <div style="margin: 10px 0;">
+                            {{range .Tags}}<span class="tag-badge">#{{.}}</span>{{end}}
+                            <button class="add-tag-btn" onclick="addTag('{{.MediaHashID}}')">+ Etiket</button>
+                            <!--<button class="add-tag-btn" style="border-style: solid; color: #28a745; border-color: #28a745;" onclick="autoTagFromDate('{{.MediaHashID}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}')">📅 Otomatik Etiket</button>-->
+                        </div>
+
+                        <div style="margin-top: 10px;">
+                            <button class="move-btn" onclick="moveFile({{.ID}}, '{{.MediaHashID}}', '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}')">Taşı</button>
+                            <button class="rename-btn" onclick="renameFile({{.ID}}, '{{.FileName}}')">Adlandır</button>
+                            <button class="delete-btn" onclick="deleteFile({{.ID}})">Sil</button>
+                            <button class="delete-others-btn" onclick="deleteOthers({{.ID}}, '{{.MediaHashID}}')">Diğerlerini Sil</button>
+                        </div>
+                        <div>
+                            <button class="move-delete-others-btn" onclick="moveAndDeleteOthers({{.ID}}, '{{.MediaHashID}}', '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}')">Taşı ve Diğerlerini Sil</button>
+                        </div>
+
+                        {{if isImage .FileName}}
+                            <img src="/serve-file?path={{.FilePath}}">
+                        {{else if isVideo .FileName}}
+                            <video src="/serve-file?path={{.FilePath}}" controls muted></video>
+                        {{end}}
+              
+              
+                    </div>
+                {{end}}
+            </div>
+            {{else}}
+                <p style="color: #666; text-align: center; margin-top: 100px;">
+                Lütfen sol listeden detaylarını görmek istediğiniz bir hash seçin.
+                </p>
+            {{end}}
+        </div>
+    </div>
+    <script src="app.js"></script>
+  <script>
+    const imageSuggestBase = {{.IndexSuggestion.ImagePath}};
+    const videoSuggestBase = {{.IndexSuggestion.VideoPath}};
+    const defaultHashtag = {{.DefaultHashtag}};
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebar = document.querySelector('.sidebar');
+      const params = new URLSearchParams(window.location.search);
+      const currentHashId = params.get('hash_id');
+
+      // 1. Kaydedilmiş kaydırma konumunu (scroll) geri yükle
+      const savedScrollTop = sessionStorage.getItem('sidebarScrollTop');
+      if (savedScrollTop !== null) {
+        sidebar.scrollTop = parseInt(savedScrollTop, 10);
+      }
+
+      const links = document.querySelectorAll('.hash-link');
+      links.forEach(link => {
+        // 2. URL'deki hash_id parametresine göre aktif olan satırı işaretle
+        if (currentHashId && link.href.includes('hash_id=' + currentHashId)) {
+          link.classList.add('active');
+        }
+
+        // 3. Bir hash tıklandığında mevcut kaydırma konumunu kaydet
+        link.addEventListener('click', () => {
+          sessionStorage.setItem('sidebarScrollTop', sidebar.scrollTop);
+        });
+      });
+    });
+
+    async function renameFile(id, currentName) {
+      let suggestedName = currentName;
+      const lastDotIndex = currentName.lastIndexOf('.');
+      
+      if (lastDotIndex !== -1) {
+        const base = currentName.substring(0, lastDotIndex);
+        const ext = currentName.substring(lastDotIndex).toLowerCase();
+        suggestedName = base + ext;
+      }
+
+      const newName = prompt("Yeni dosya adını girin (uzantısıyla birlikte):", suggestedName);
+      if (!newName || newName === currentName) return;
+
+      const res = await fetch(`/api/rename?id=${id}&new_name=${encodeURIComponent(newName)}`, { method: 'POST' });
+      if (res.ok) {
+        location.reload();
+      } else {
+        alert("Hata: " + await res.text());
+      }
+    }
+
+    async function moveFile(id, hashID, type, year, month) {
+      const base = type === 'image' ? imageSuggestBase : videoSuggestBase;
+      const suggestedPath = base + "\\" + year + "\\" + month;
+
+      const targetDir = prompt("Dosyanın taşınacağı hedef dizin yolunu girin:", suggestedPath);
+      if (!targetDir) return;
+
+      const res = await fetch(`/api/move?id=${id}&target_dir=${encodeURIComponent(targetDir)}`, { method: 'POST' });
+      if (res.ok) {
+        // Taşıma başarılıysa otomatik etiketle (sayfayı yenilemeden)
+        await autoTagFromDate(hashID, year, month, true);
+        location.reload();
+      } else {
+        alert("Hata: " + await res.text());
+      }
+    }
+
+    async function addTag(hashID) {
+      const lastUsedTag = localStorage.getItem('lastUsedHashtag') || defaultHashtag;
+      const tag = prompt("Eklemek istediğiniz etiketleri girin (virgül ile ayırabilirsiniz):", lastUsedTag);
+      
+      if (!tag) return;
+
+      localStorage.setItem('lastUsedHashtag', tag);
+      const res = await fetch(`/api/add-tag?hash_id=${hashID}&tag=${encodeURIComponent(tag)}`, { method: 'POST' });
+      if (res.ok) {
+        location.reload();
+      } else {
+        alert("Hata: " + await res.text());
+      }
+    }
+
+    async function autoTagFromDate(hashID, year, month, skipReload = false) {
+      const months = {
+        "01": "Ocak", "02": "Şubat", "03": "Mart", "04": "Nisan",
+        "05": "Mayıs", "06": "Haziran", "07": "Temmuz", "08": "Ağustos",
+        "09": "Eylül", "10": "Ekim", "11": "Kasım", "12": "Aralık"
+      };
+      const tags = `${year},${months[month] || month}`;
+      const res = await fetch(`/api/add-tag?hash_id=${hashID}&tag=${encodeURIComponent(tags)}`, { method: 'POST' });
+      if (res.ok) {
+        if (!skipReload) location.reload();
+      } else {
+        alert("Hata: " + await res.text());
+      }
+    }
+
+    async function deleteOthers(keepID, hashID) {
+      if (!confirm('Bu dosya DIŞINDAKI tüm kopyaları hem diskten hem veritabanından silmek istediğinize emin misiniz?')) return;
+      
+      try {
+        const res = await fetch(`/api/delete-others?keep_id=${keepID}&hash_id=${hashID}`, { method: 'DELETE' });
+        if (res.ok) {
+          location.reload();
+        } else {
+          alert("Hata: " + await res.text());
+        }
+      } catch (e) {
+        alert("Sunucuyla iletişim kurulurken bir hata oluştu.");
+      }
+    }
+
+    async function moveAndDeleteOthers(id, hashID, type, year, month) {
+      const base = type === 'image' ? imageSuggestBase : videoSuggestBase;
+      const suggestedPath = base + "\\" + year + "\\" + month;
+
+      const targetDir = prompt("DİKKAT: Bu işlem dosyayı taşıyacak ve DİĞER tüm kopyaları silecektir.\nHedef dizin yolunu girin:", suggestedPath);
+      if (!targetDir) return;
+      try {
+        const res = await fetch(`/api/move-and-delete-others?id=${id}&hash_id=${hashID}&target_dir=${encodeURIComponent(targetDir)}`, { method: 'POST' });
+        if (res.ok) {
+          // Taşıma başarılıysa otomatik etiketle (sayfayı yenilemeden)
+          await autoTagFromDate(hashID, year, month, true);
+          location.reload();
+        } else {
+          alert("Hata: " + await res.text());
+        }
+      } catch (e) {
+        alert("Sunucuyla iletişim kurulurken bir hata oluştu.");
+      }
+    }
+  </script>
+  </body>
+</html>

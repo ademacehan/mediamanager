@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Media Manager</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; background-color: #f4f7f6; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    
+    .main-layout { display: flex; gap: 20px; align-items: flex-start; }
+    .sidebar { flex: 0 0 250px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 20px; }
+    .content-area { flex: 1; }
+
+    .filter-group { margin-bottom: 25px; }
+    .filter-group h4 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    .tag-checkbox { display: block; margin-bottom: 8px; cursor: pointer; font-size: 14px; }
+    
+    /* Etiket listesi için scroll ve arama stilleri */
+    .tag-list-container {
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    .tag-search {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .selected-tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .file-type-select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; }
+
+    .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    .file-card { background: white; border: 1px solid #ddd; padding: 10px; border-radius: 8px; text-align: left; display: flex; flex-direction: column; }
+    .file-card img { width: 100%; height: 200px; object-fit: contain; background-color: #eee; border-radius: 4px; margin-bottom: 10px; cursor: pointer; transition: transform 0.2s; }
+    .file-card video { width: 100%; height: 200px; object-fit: contain; background-color: #eee; border-radius: 4px; margin-bottom: 10px; cursor: pointer; }
+    .file-card img:hover { transform: scale(1.02); }
+    .file-card strong { font-size: 10px; word-break: break-all; display: block; margin-bottom: 2px; }
+    .file-card small { font-size: 8px; color: #666; word-break: break-all; display: block; line-height: 1.2; margin-top: 2px; }
+    
+    /* Etiket Renk Paleti (Sıralı) */
+    .tag-badge { padding: 1px 6px; border-radius: 12px; font-size: 9px; margin-right: 3px; display: inline-block; margin-bottom: 3px; }
+    .tag-badge:nth-of-type(11n+1) { background-color: #007bff; color: white; } 
+    .tag-badge:nth-of-type(11n+2) { background-color: #fd7e14; color: white; } 
+    .tag-badge:nth-of-type(11n+3) { background-color: #ffc107; color: #212529; } 
+    .tag-badge:nth-of-type(11n+4) { background-color: #6f42c1; color: white; } 
+    .tag-badge:nth-of-type(11n+5) { background-color: #15d3ecbd; color: black; } 
+    .tag-badge:nth-of-type(11n+6) { background-color: #a55eea; color: white; } 
+    .tag-badge:nth-of-type(11n+7) { background-color: #0a07b3; color: white; } 
+    .tag-badge:nth-of-type(11n+8) { background-color: #1a0202; color: white; } 
+    .tag-badge:nth-of-type(11n+9) { background-color: #75ee12; color: white; } 
+    .tag-badge:nth-of-type(11n+10) { background-color: #e908b1; color: white; } 
+    .tag-badge:nth-of-type(11n+11) { background-color: #be9a9a; color: black; } 
+
+    .tag-badge .remove-tag { color: inherit; opacity: 0.6; cursor: pointer; margin-left: 5px; font-weight: bold; text-decoration: none; }
+    .tag-badge .remove-tag:hover { color: #dc3545; }
+    .tag-badge:hover .remove-tag { opacity: 1; }
+
+    .add-tag-btn { background: none; border: 1px dashed #6c757d; color: #6c757d; cursor: pointer; border-radius: 3px; padding: 2px 6px; font-size: 11px; margin-top: 5px; }
+    .add-tag-btn:hover { background-color: #f8f9fa; }
+    .delete-btn { background-color: #ff4444; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; font-size: 11px; }
+    .rename-btn { background-color: #ffc107; color: black; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; margin-right: 5px; font-size: 11px; }
+    .move-btn { background-color: #17a2b8; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; margin-right: 5px; font-size: 11px; }
+    .move-btn:hover { background-color: #138496; }
+    .rename-btn:hover { background-color: #e0a800; }
+    .delete-btn:hover { background-color: #cc0000; }
+    
+    .pagination { margin-top: 30px; text-align: center; }
+    .pagination a { padding: 8px 16px; text-decoration: none; border: 1px solid #007bff; color: #007bff; border-radius: 4px; margin: 0 5px; }
+    .pagination a.active { background: #007bff; color: white; }
+    .pagination a.disabled { color: #ccc; border-color: #ccc; pointer-events: none; }
+
+    /* Lightbox Styles */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+    .modal-content { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 4px; }
+    .modal-video { display: none; max-width: 90%; max-height: 90%; outline: none; }
+    .close-modal { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; }
+    
+    /* Navigasyon Butonları */
+    .prev-modal, .next-modal { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 50px; font-weight: bold; cursor: pointer; padding: 20px; user-select: none; transition: color 0.2s; }
+    .prev-modal { left: 10px; }
+    .next-modal { right: 10px; }
+    .prev-modal:hover, .next-modal:hover { color: #007bff; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Media Gallery</h1>
+    <div>
+      <a href="/scan" style="text-decoration:none; color:#007bff; margin-right:20px;">Dizin Tara</a>
+      <a href="/duplicates" style="text-decoration:none; color:#007bff;">Duplicate Kontrolü</a>
+      <a href="/untagged" style="text-decoration:none; color:#007bff;">Etiketsiz Dosyalar</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <form action="/" method="GET" id="filterForm" onsubmit="event.preventDefault(); applyFilters();">
+        <div class="filter-group">
+          <h4>Dosya Tipi</h4>
+          <select name="file_type" class="file-type-select" onchange="applyFilters()">
+            <option value="all" {{if eq .SelectedFileType "all"}}selected{{end}}>Hepsi</option>
+            <option value="image" {{if eq .SelectedFileType "image"}}selected{{end}}>Resimler</option>
+            <option value="video" {{if eq .SelectedFileType "video"}}selected{{end}}>Videolar</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <h4>Etiketler</h4>
+          {{if .SelectedTags}}
+          <div class="selected-tags-container">
+            {{range .SelectedTags}}
+            <span class="tag-badge">
+              {{.}} <span class="remove-tag" style="color: white; cursor: pointer; margin-left: 5px;" onclick="toggleTag('{{.}}')">×</span>
+            </span>
+            {{end}}
+          </div>
+          {{end}}
+          <input type="text" id="tagSearch" class="tag-search" placeholder="Etiket ara..." onkeyup="filterTags()">
+          <div class="tag-list-container">
+            {{range .AllTags}}
+            <label class="tag-checkbox">
+              <input type="checkbox" name="tags" value="{{.Name}}" onchange="applyFilters()" {{if contains $.SelectedTags .Name}}checked{{end}}> 
+              <span class="tag-text">{{.Name}}</span> ({{.Count}})
+            </label>
+            {{else}}
+            <small style="color:#999">Henüz etiket yok.</small>
+            {{end}}
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="content-area">
+      <div class="grid-container">
+        {{range .MediaList}}
+        <div class="file-card">
+          <strong>{{.FileName}}</strong>
+          <small>{{.FilePath}}</small>
+          <small>{{.FileFirstCreate}}</small>
+          <small>Boyut: {{.FileSize}} bytes</small>
+          <small>HashID: <a href="/duplicates?hash_id={{.MediaHashID}}" target="_blank" style="color: #007bff; text-decoration: none;">{{.MediaHashID}}</a></small>
+          {{if isImage .FileName}}
+          <img src="/serve-file?path={{.FilePath}}" alt="{{.FileName}}" onclick="openLightbox(this)">
+          {{else if isVideo .FileName}}
+          <video src="/serve-file?path={{.FilePath}}" onclick="openLightbox(this)" muted></video>
+          {{else}}
+          <div style="width:100%; aspect-ratio: 1 / 1; background:#333; color:white; display:flex; align-items:center; justify-content:center; border-radius:4px; margin-bottom:10px;">
+            <span>Video / Medya</span>
+          </div>
+          {{end}}
+
+          {{$hashID := .MediaHashID}}
+          <div style="margin: 5px 0;">
+            {{range .Tags}}
+            <span class="tag-badge">#{{.}} <a class="remove-tag" title="Sil" onclick="removeTag('{{$hashID}}', '{{.}}')">×</a></span>
+            {{end}}
+            <br>
+            <button class="add-tag-btn" onclick="addTag('{{.MediaHashID}}')">+ Etiket</button><br>
+            <div style="margin-top: 10px;">
+              <button class="move-btn" onclick="moveFile({{.ID}}, '{{.MediaHashID}}', '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}')">Taşı</button>
+              <button class="rename-btn" onclick="renameFile({{.ID}}, '{{.FileName}}')">Adlandır</button>
+              <button class="delete-btn" onclick="deleteFile({{.ID}})">Sil</button>
+            </div>
+          </div>
+        </div>
+        {{else}}
+        <p style="grid-column: span 3; text-align: center; padding-top: 50px;">Seçilen kriterlere uygun dosya bulunamadı.</p>
+        {{end}}
+      </div>
+
+      <div class="pagination">
+        {{if gt .PrevPage 0}}
+        <a href="/?page={{.PrevPage}}{{range $.SelectedTags}}&tags={{.}}{{end}}&file_type={{$.SelectedFileType}}">« Geri</a>
+        {{end}}
+        <span>Sayfa {{.CurrentPage}} / {{.TotalPages}}</span>
+        {{if lt .CurrentPage .TotalPages}}
+        <a href="/?page={{.NextPage}}{{range $.SelectedTags}}&tags={{.}}{{end}}&file_type={{$.SelectedFileType}}">İleri »</a>
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div id="lightbox" class="modal" onclick="closeLightbox()">
+    <span class="close-modal" onclick="closeLightbox()">&times;</span>
+    <span class="prev-modal" onclick="changeImage(-1, event)">&#10094;</span>
+    <img class="modal-content" id="lightboxImg" onclick="event.stopPropagation()">
+    <video class="modal-video" id="lightboxVid" controls onclick="event.stopPropagation()"></video>
+    <span class="next-modal" onclick="changeImage(1, event)">&#10095;</span>
+  </div>
+
+  <script>
+    const imageSuggestBase = {{.IndexSuggestion.ImagePath}};
+    const videoSuggestBase = {{.IndexSuggestion.VideoPath}};
+    const defaultHashtag = {{.DefaultHashtag}};
+
+    let filterAbortController = null;
+
+    async function applyFilters() {
+      const form = document.getElementById('filterForm');
+      const formData = new FormData(form);
+      const params = new URLSearchParams(formData);
+      const url = `/?${params.toString()}`;
+
+      // 1. Eğer halihazırda giden bir istek varsa iptal et
+      if (filterAbortController) {
+        filterAbortController.abort();
+      }
+      // 2. Yeni bir controller oluştur
+      filterAbortController = new AbortController();
+
+      try {
+        // 3. İsteği signal ile gönder
+        const response = await fetch(url, { signal: filterAbortController.signal });
+        const text = await response.text();
+        
+        // 4. Sadece galeriyi ve sidebar'ı güncelle (Sayfa yenilenmeden)
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        document.querySelector('.content-area').innerHTML = doc.querySelector('.content-area').innerHTML;
+        document.querySelector('.sidebar').innerHTML = doc.querySelector('.sidebar').innerHTML;
+        
+        // URL'yi güncelle (Geri/İleri butonları için)
+        window.history.pushState({}, '', url);
+        galleryImages = Array.from(document.querySelectorAll('.grid-container img, .grid-container video'));
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          console.log('Eski istek iptal edildi, yeni filtre uygulanıyor...');
+        } else {
+          console.error('Filtreleme hatası:', err);
+        }
+      }
+    }
+
+    async function autoTagFromDate(hashID, year, month, skipReload = false) {
+      const months = {
+        "01": "Ocak", "02": "Şubat", "03": "Mart", "04": "Nisan",
+        "05": "Mayıs", "06": "Haziran", "07": "Temmuz", "08": "Ağustos",
+        "09": "Eylül", "10": "Ekim", "11": "Kasım", "12": "Aralık"
+      };
+      const tags = `${year},${months[month] || month}`;
+      const res = await fetch(`/api/add-tag?hash_id=${hashID}&tag=${encodeURIComponent(tags)}`, { method: 'POST' });
+      if (res.ok) {
+        if (!skipReload) location.reload();
+      } else {
+        alert("Hata: " + await res.text());
+      }
+    }
+
+    async function addTag(hashID) {
+      const lastUsedTag = localStorage.getItem('lastUsedHashtag') || defaultHashtag;
+      const tag = prompt("Eklemek istediğiniz etiketleri girin (virgül ile ayırabilirsiniz):", lastUsedTag);
+      
+      if (!tag) return;
+
+      localStorage.setItem('lastUsedHashtag', tag);
+      const res = await fetch(`/api/add-tag?hash_id=${hashID}&tag=${encodeURIComponent(tag)}`, { method: 'POST' });
+      if (res.ok) {
+        location.reload();
+      } else {
+        alert("Hata: " + await res.text());
+      }
+    }
+
+    async function removeTag(hashID, tag) {
+      if (!confirm(`'${tag}' etiketini bu resimden kaldırmak istediğinize emin misiniz?`)) return;
+
+      const res = await fetch(`/api/remove-tag?hash_id=${hashID}&tag=${encodeURIComponent(tag)}`, { method: 'POST' });
+      if (res.ok) {
+        location.reload();
+      } else {
+        alert("Hata: " + await res.text());
+      }
+    }
+
+    async function renameFile(id, currentName) {
+      let suggestedName = currentName;
+      const lastDotIndex = currentName.lastIndexOf('.');
+      
+      if (lastDotIndex !== -1) {
+        const base = currentName.substring(0, lastDotIndex);
+        const ext = currentName.substring(lastDotIndex).toLowerCase();
+        suggestedName = base + ext;
+      }
+
+      const newName = prompt("Yeni dosya adını girin (uzantısıyla birlikte):", suggestedName);
+      if (!newName || newName === currentName) return;
+
+      const res = await fetch(`/api/rename?id=${id}&new_name=${encodeURIComponent(newName)}`, { method: 'POST' });
+      if (res.ok) {
+        location.reload();
+      } else {
+        alert("Hata: " + await res.text());
+      }
+    }
+
+    async function moveFile(id, hashID, type, year, month) {
+      const base = type === 'image' ? imageSuggestBase : videoSuggestBase;
+      const suggestedPath = base + "\\" + year + "\\" + month;
+      
+      const targetDir = prompt("Dosyanın taşınacağı hedef dizin yolunu girin:", suggestedPath);
+      if (!targetDir) return;
+
+      const res = await fetch(`/api/move?id=${id}&target_dir=${encodeURIComponent(targetDir)}`, { method: 'POST' });
+      if (res.ok) {
+        await autoTagFromDate(hashID, year, month, true);
+        location.reload();
+      } else {
+        alert("Hata: " + await res.text());
+      }
+    }
+
+    async function deleteFile(id) {
+      if (!confirm('Bu dosyayı kalıcı olarak silmek istediğinize emin misiniz?')) return;
+      try {
+        const response = await fetch(`/api/delete?id=${id}`, { method: 'DELETE' });
+        if (response.ok) {
+          location.reload();
+        } else {
+          const errorText = await response.text();
+          alert('Silme işlemi başarısız: ' + errorText);
+        }
+      } catch (e) { 
+        console.error(e); 
+        alert('Sunucuyla iletişim kurulurken bir hata oluştu: ' + e.message);
+      }
+    }
+
+    let galleryImages = [];
+    let currentIndex = 0;
+
+    function openLightbox(imgElement) {
+      // Sayfadaki tüm resim elementlerini topla
+      const allImgs = document.querySelectorAll('.grid-container img, .grid-container video');
+      galleryImages = Array.from(allImgs);
+      currentIndex = galleryImages.indexOf(imgElement);
+      
+      updateLightbox();
+      document.getElementById('lightbox').style.display = 'flex';
+    }
+
+    function updateLightbox() {
+      const modalImg = document.getElementById('lightboxImg');
+      const modalVid = document.getElementById('lightboxVid');
+      const currentEl = galleryImages[currentIndex];
+
+      if (currentEl.tagName === 'VIDEO') {
+        modalImg.style.display = 'none';
+        modalVid.style.display = 'block';
+        modalVid.src = currentEl.src;
+      } else {
+        modalVid.style.display = 'none';
+        modalVid.src = '';
+        modalImg.style.display = 'block';
+        modalImg.src = currentEl.src;
+      }
+    }
+
+    function changeImage(direction, event) {
+      if (event) event.stopPropagation();
+      
+      currentIndex += direction;
+      
+      // Listenin başına veya sonuna gelince döngü sağla
+      if (currentIndex >= galleryImages.length) currentIndex = 0;
+      if (currentIndex < 0) currentIndex = galleryImages.length - 1;
+      
+      updateLightbox();
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
+    }
+
+    function filterTags() {
+      const input = document.getElementById('tagSearch');
+      const filter = input.value.toLowerCase();
+      const labels = document.querySelectorAll('.tag-checkbox');
+
+      labels.forEach(label => {
+        const tagName = label.querySelector('.tag-text').textContent.toLowerCase();
+        if (tagName.includes(filter)) {
+          label.style.display = "";
+        } else {
+          label.style.display = "none";
+        }
+      });
+    }
+
+    function toggleTag(tagName) {
+      const checkboxes = document.getElementsByName('tags');
+      for (let cb of checkboxes) {
+        if (cb.value === tagName) {
+          cb.checked = false;
+          break;
+        }
+      }
+      document.getElementById('filterForm').submit();
+    }
+  </script>
+</body>
+</html>

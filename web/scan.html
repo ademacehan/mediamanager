@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dizin Tarama</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .nav { margin-bottom: 20px; }
+    .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <a href="/">← Ana Sayfa</a>
+    <a href="/duplicates">Tekrar Eden Dosyalar</a>
+    <a href="/untagged" style="text-decoration:none; color:#007bff;">Etiketsiz Dosyalar</a>
+  </div>
+
+  <h1>Dizin Tarama</h1>
+  <input type="text" id="rootPath" placeholder="C:\Medya\Klasorum" style="width:300px; padding: 5px;"/>
+  <button onclick="sendScan()" style="padding: 5px 15px;">Tara</button>
+  <p id="result"></p>
+
+  <script src="app.js"></script>
+</body>
+</html>

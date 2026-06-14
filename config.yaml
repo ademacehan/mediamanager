@@ -1,0 +1,12 @@
+database:
+  host: localhost
+  port: 6432
+  user: aacehan
+  password: 1
+  dbname: mediamanager
+  sslmode: disable
+index_suggestion:
+  image_path: D:\Media\Resimler\Aile
+  video_path: D:\Media\video
+hashtag:
+  defhtag: "Ayşe Duru"
