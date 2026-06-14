@@ -117,7 +117,7 @@
 
                         <div style="margin-top: 10px;">
                             <button class="move-btn" onclick="moveFile({{.ID}}, {{.MediaHashID | js}}, '{{if isImage .FileName}}image{{else}}video{{end}}', '{{.FileFirstCreate.Format "2006"}}', '{{.FileFirstCreate.Format "01"}}', '{{.FileFirstCreate.Format "02"}}')">Taşı</button>
-                            <button class="rename-btn" onclick="renameFile({{.ID}}, {{.FileName | js}})">Adlandır</button>
+                            <button class="rename-btn" onclick="renameFile({{.ID}}, {{.FileName | js}}, '{{if isImage .FileName}}image{{else}}video{{end}}', {{.FileFirstCreate.UnixMilli}})">Adlandır</button>
                             <button class="delete-btn" onclick="deleteFile({{.ID}})">Sil</button>
                             <button class="delete-others-btn" onclick="deleteOthers({{.ID}}, {{.MediaHashID | js}})">Diğerlerini Sil</button>
                         </div>

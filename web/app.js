@@ -35,14 +35,26 @@ async function deleteFile(id) {
     }
 }
 
-async function renameFile(id, currentName) {
-    let suggestedName = currentName;
+async function renameFile(id, currentName, type, unixMilli) {
+    const date = new Date(unixMilli);
+    const pad = (n, l = 2) => String(n).padStart(l, '0');
+    
+    const y = date.getFullYear();
+    const m = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    const ss = pad(date.getSeconds());
+    const ms = pad(date.getMilliseconds(), 3);
+
+    const prefix = type === 'image' ? 'IMG' : 'VID';
+    const timePart = `${y}${m}${d}_${hh}${mm}${ss}_${ms}`;
+    
     const lastDotIndex = currentName.lastIndexOf('.');
-    if (lastDotIndex !== -1) {
-        const base = currentName.substring(0, lastDotIndex);
-        const ext = currentName.substring(lastDotIndex).toLowerCase();
-        suggestedName = base + ext;
-    }
+    const base = lastDotIndex !== -1 ? currentName.substring(0, lastDotIndex) : currentName;
+    const ext = lastDotIndex !== -1 ? currentName.substring(lastDotIndex).toLowerCase() : "";
+
+    const suggestedName = `${prefix}_${timePart}_${base}${ext}`;
     const newName = prompt("Yeni dosya adını girin (uzantısıyla birlikte):", suggestedName);
     if (!newName || newName === currentName) return;
     const res = await fetch(`/api/rename?id=${id}&new_name=${encodeURIComponent(newName)}`, { method: 'POST' });
