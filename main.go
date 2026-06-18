@@ -381,11 +381,23 @@ func main() {
 	})
 
 	http.HandleFunc("/serve-file", func(w http.ResponseWriter, r *http.Request) {
-		filePath := r.URL.Query().Get("path")
+		filePath := filepath.Clean(r.URL.Query().Get("path"))
+
+		// Dosyanın varlığını kontrol et
+		if info, err := os.Stat(filePath); err != nil || info.IsDir() {
+			log.Printf("Dosya erişim hatası: %s - Hata: %v", filePath, err)
+			http.Error(w, "Dosya bulunamadı veya erişilemez", http.StatusNotFound)
+			return
+		}
 
 		// http.ServeFile, HTTP Range Requests desteğini otomatik olarak sağlar.
 		// Bu sayede video oynatıcısında ileri-geri sarma özelliği çalışır.
-		// Ayrıca Content-Type başlığını dosya uzantısına göre kendisi belirler.
+
+		// Windows sistemlerde bazen MIME tipi yanlış belirlenebilir, manuel set edelim
+		if strings.HasSuffix(strings.ToLower(filePath), ".mp4") {
+			w.Header().Set("Content-Type", "video/mp4")
+		}
+
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		http.ServeFile(w, r, filePath)
 	})

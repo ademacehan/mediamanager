@@ -127,9 +127,9 @@
               </div>
 
               {{if isImage .FileName}}
-                  <img src="/serve-file?path={{.FilePath}}">
+                  <img src="/serve-file?path={{.FilePath | urlquery}}">
               {{else if isVideo .FileName}}
-                  <video src="/serve-file?path={{.FilePath}}" controls muted></video>
+                  <video src="/serve-file?path={{.FilePath | urlquery}}" controls muted></video>
               {{end}}
               
               

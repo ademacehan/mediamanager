@@ -148,9 +148,9 @@
           <small>Boyut: {{.FileSize}} bytes</small>
           <small>HashID: <a href="/duplicates?hash_id={{.MediaHashID}}" target="_blank" style="color: #007bff; text-decoration: none;">{{.MediaHashID}}</a></small>
           {{if isImage .FileName}}
-          <img src="/serve-file?path={{.FilePath}}" alt="{{.FileName}}" onclick="openLightbox(this)">
+          <img src="/serve-file?path={{.FilePath | urlquery}}" alt="{{.FileName}}" data-path="{{.FilePath | urlquery}}" onclick="openLightbox(this)">
           {{else if isVideo .FileName}}
-          <video src="/serve-file?path={{.FilePath}}" onclick="openLightbox(this)" muted></video>
+          <video src="/serve-file?path={{.FilePath | urlquery}}" data-path="{{.FilePath | urlquery}}" onclick="openLightbox(this)" muted></video>
           {{else}}
           <div style="width:100%; aspect-ratio: 1 / 1; background:#333; color:white; display:flex; align-items:center; justify-content:center; border-radius:4px; margin-bottom:10px;">
             <span>Video / Medya</span>
@@ -261,16 +261,18 @@
       const modalImg = document.getElementById('lightboxImg');
       const modalVid = document.getElementById('lightboxVid');
       const currentEl = galleryImages[currentIndex];
+      const path = currentEl.getAttribute('data-path');
+      const serveUrl = `/serve-file?path=${path}`;
 
       if (currentEl.tagName === 'VIDEO') {
         modalImg.style.display = 'none';
         modalVid.style.display = 'block';
-        modalVid.src = currentEl.src;
+        modalVid.src = serveUrl;
       } else {
         modalVid.style.display = 'none';
         modalVid.src = '';
         modalImg.style.display = 'block';
-        modalImg.src = currentEl.src;
+        modalImg.src = serveUrl;
       }
     }
 
